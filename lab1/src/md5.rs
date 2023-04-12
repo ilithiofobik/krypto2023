@@ -90,12 +90,12 @@ pub struct Context {
     state: [u32; 4],
 }
 
-const PADDING: [u8; 64] = [
-    0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-];
+// const PADDING: [u8; 64] = [
+//     0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+//     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+//     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+//     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+// ];
 
 impl Context {
     /// Create a context for computing a digest.
@@ -124,31 +124,37 @@ impl Context {
     }
 
     /// Finalize and return the digest.
-    pub fn compute(mut self) -> Digest {
-        let mut input = [0u32; 16];
-        let k = ((self.count[0] >> 3) & 0x3f) as usize;
-        input[14] = self.count[0];
-        input[15] = self.count[1];
-        consume(
-            &mut self,
-            &PADDING[..(if k < 56 { 56 - k } else { 120 - k })],
-        );
-        let mut j = 0;
-        for i in 0..14 {
-            input[i] = ((self.buffer[j + 3] as u32) << 24) |
-                       ((self.buffer[j + 2] as u32) << 16) |
-                       ((self.buffer[j + 1] as u32) <<  8) |
-                       ((self.buffer[j    ] as u32)      );
-            j += 4;
-        }
-        transform(&mut self.state, &input);
+    pub fn compute(self) -> Digest {
+        //let mut input = [0u32; 16];
+        //let k = ((self.count[0] >> 3) & 0x3f) as usize;
+        //input[14] = self.count[0];
+        //input[15] = self.count[1];
+        // consume(
+        //     &mut self,
+        //     &PADDING[..(if k < 56 { 56 - k } else { 120 - k })],
+        // );
+        // let mut j = 0;
+        // for i in 0..16 {
+        //     input[i] = ((self.buffer[j + 3] as u32) << 24) |
+        //                ((self.buffer[j + 2] as u32) << 16) |
+        //                ((self.buffer[j + 1] as u32) <<  8) |
+        //                ((self.buffer[j    ] as u32)      );
+        //     j += 4;
+        // }
+        // transform(&mut self.state, &input);
         let mut digest = [0u8; 16];
+        // let mut j = 0;
+        // for i in 0..4 {
+        //     digest[j    ] = ((self.state[i]      ) & 0xff) as u8;
+        //     digest[j + 1] = ((self.state[i] >>  8) & 0xff) as u8;
+        //     digest[j + 2] = ((self.state[i] >> 16) & 0xff) as u8;
+        //     digest[j + 3] = ((self.state[i] >> 24) & 0xff) as u8;
+        //     j += 4;
+        // }
         let mut j = 0;
         for i in 0..4 {
-            digest[j    ] = ((self.state[i]      ) & 0xff) as u8;
-            digest[j + 1] = ((self.state[i] >>  8) & 0xff) as u8;
-            digest[j + 2] = ((self.state[i] >> 16) & 0xff) as u8;
-            digest[j + 3] = ((self.state[i] >> 24) & 0xff) as u8;
+            let bytes = self.state[i].to_be_bytes();
+            digest[j..j + 4].copy_from_slice(&bytes);
             j += 4;
         }
         Digest(digest)
@@ -176,13 +182,13 @@ impl io::Write for Context {
     }
 }
 
-/// Compute the digest of data.
-#[inline]
-pub fn compute<T: AsRef<[u8]>>(data: T) -> Digest {
-    let mut context = Context::new();
-    context.consume(data);
-    context.compute()
-}
+// /// Compute the digest of data.
+// #[inline]
+// pub fn compute<T: AsRef<[u8]>>(data: T) -> Digest {
+//     let mut context = Context::new();
+//     context.consume(data);
+//     context.compute()
+// }
 
 fn consume(
     Context {
