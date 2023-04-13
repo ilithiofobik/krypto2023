@@ -22,7 +22,7 @@ fn verify(m0: &Vec<u8>, m1: &Vec<u8>, m0_p: &Vec<u8>, m1_p: &Vec<u8>) -> bool {
     context_p.consume(m1_p);
     let digest_p = context_p.compute();
     
-    println!("m  -> {:x}", digest_p);
+    println!("m  -> {:x}", digest);
     println!("m' -> {:x}", digest_p);
     format!("{:x}", digest) == format!("{:x}", digest_p) 
 }
