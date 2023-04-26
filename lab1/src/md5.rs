@@ -85,9 +85,9 @@ implement!(UpperHex, "{:02X}");
 /// A context.
 #[derive(Clone)]
 pub struct Context {
-    buffer: [u8; 64],
-    count: [u32; 2],
-    state: [u32; 4],
+    pub buffer: [u8; 64],
+    pub count: [u32; 2],
+    pub state: [u32; 4],
 }
 
 // const PADDING: [u8; 64] = [

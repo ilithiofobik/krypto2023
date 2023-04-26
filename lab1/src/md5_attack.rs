@@ -85,9 +85,9 @@ implement!(UpperHex, "{:02X}");
 /// A context.
 #[derive(Clone)]
 pub struct Context {
-    buffer: [u8; 64],
-    count: [u32; 2],
-    state: [u32; 4],
+    pub buffer: [u8; 64],
+    pub count: [u32; 2],
+    pub state: [u32; 4],
 }
 
 // const PADDING: [u8; 64] = [
@@ -158,7 +158,7 @@ impl io::Write for Context {
 //     context.compute()
 // }
 
-fn consume_attack(
+pub fn consume_attack(
     Context {
         buffer,
         count,
@@ -192,7 +192,7 @@ fn consume_attack(
     }
 }
 
-fn transform_attack(state: &mut [u32; 4], input: &mut [u32; 16]) {
+pub fn transform_attack(state: &mut [u32; 4], input: &mut [u32; 16]) {
     let (mut a, mut b, mut c, mut d) = (state[0], state[1], state[2], state[3]);
     let (mut a_prev, mut b_prev, mut c_prev, mut d_prev) = (state[0], state[1], state[2], state[3]);
 
@@ -202,7 +202,7 @@ fn transform_attack(state: &mut [u32; 4], input: &mut [u32; 16]) {
     macro_rules! sub(
         ($a:expr, $b:expr) => ($a.wrapping_sub($b));
     );
-    macro_rules! rotate(
+    macro_rules! rotate_left(
         ($x:expr, $n:expr) => (($x << $n) | ($x >> (32 - $n)));
     );
     macro_rules! rotate_right(
@@ -224,7 +224,7 @@ fn transform_attack(state: &mut [u32; 4], input: &mut [u32; 16]) {
         macro_rules! T(
             ($a:expr, $b:expr, $c:expr, $d:expr, $x:expr, $s:expr, $ac:expr) => ({
                 $a = add!(add!(add!($a, F!($b, $c, $d)), $x), $ac);
-                $a = rotate!($a, $s);
+                $a = rotate_left!($a, $s);
                 $a = add!($a, $b);
             });
         );
@@ -235,6 +235,7 @@ fn transform_attack(state: &mut [u32; 4], input: &mut [u32; 16]) {
                 $x = sub!($x, add!(add!(F!($b, $c, $d), $ac), $a_prev));
             });
         );
+
         const S1: u32 =  7;
         const S2: u32 = 12;
         const S3: u32 = 17;
@@ -389,7 +390,7 @@ fn transform_attack(state: &mut [u32; 4], input: &mut [u32; 16]) {
         macro_rules! T(
             ($a:expr, $b:expr, $c:expr, $d:expr, $x:expr, $s:expr, $ac:expr) => ({
                 $a = add!(add!(add!($a, F!($b, $c, $d)), $x), $ac);
-                $a = rotate!($a, $s);
+                $a = rotate_left!($a, $s);
                 $a = add!($a, $b);
             });
         );
@@ -421,7 +422,7 @@ fn transform_attack(state: &mut [u32; 4], input: &mut [u32; 16]) {
         macro_rules! T(
             ($a:expr, $b:expr, $c:expr, $d:expr, $x:expr, $s:expr, $ac:expr) => ({
                 $a = add!(add!(add!($a, F!($b, $c, $d)), $x), $ac);
-                $a = rotate!($a, $s);
+                $a = rotate_left!($a, $s);
                 $a = add!($a, $b);
             });
         );
@@ -453,7 +454,7 @@ fn transform_attack(state: &mut [u32; 4], input: &mut [u32; 16]) {
         macro_rules! T(
             ($a:expr, $b:expr, $c:expr, $d:expr, $x:expr, $s:expr, $ac:expr) => ({
                 $a = add!(add!(add!($a, F!($b, $c, $d)), $x), $ac);
-                $a = rotate!($a, $s);
+                $a = rotate_left!($a, $s);
                 $a = add!($a, $b);
             });
         );

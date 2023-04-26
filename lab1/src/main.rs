@@ -1,8 +1,9 @@
+mod utils;
 mod md5;
 mod md5_attack;
-mod task1;
 mod task2;
+mod task3;
 
 fn main() {   
-    task1::run();
+    task2::run();
 }
