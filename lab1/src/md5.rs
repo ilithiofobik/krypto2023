@@ -28,9 +28,13 @@
 // https://people.csail.mit.edu/rivest/Md5.c
 // https://tools.ietf.org/html/rfc1321
 
+#![allow(clippy::needless_return)]
+
 use core::convert;
 use core::fmt;
 use core::ops;
+
+use super::md5_attack::transform_attack;
 
 /// A digest.
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
@@ -117,9 +121,9 @@ impl Context {
 
     /// Consume data.
     #[cfg(target_pointer_width = "64")]
-    pub fn consume<T: AsRef<[u8]>>(&mut self, data: T) {
+    pub fn consume<T: AsRef<[u8]>>(&mut self, data: T, attack : bool) {
         for chunk in data.as_ref().chunks(core::u32::MAX as usize) {
-            consume(self, chunk);
+            consume(self, chunk, attack);
         }
     }
 
@@ -197,6 +201,7 @@ fn consume(
         state,
     }: &mut Context,
     data: &[u8],
+    attack : bool
 ) {
     let mut input = [0u32; 16];
     let mut k = ((count[0] >> 3) & 0x3f) as usize;
@@ -218,13 +223,17 @@ fn consume(
                            ((buffer[j    ] as u32)      );
                 j += 4;
             }
-            transform(state, &input);
+            if attack {
+                transform_attack(state, &mut input)
+            } else {
+                transform(state, &input);
+            }
             k = 0;
         }
     }
 }
 
-fn transform(state: &mut [u32; 4], input: &[u32; 16]) {
+pub fn transform(state: &mut [u32; 4], input: &[u32; 16]) {
     let (mut a, mut b, mut c, mut d) = (state[0], state[1], state[2], state[3]);
     macro_rules! add(
         ($a:expr, $b:expr) => ($a.wrapping_add($b));
